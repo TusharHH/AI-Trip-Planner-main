@@ -6,7 +6,6 @@ import {
   SelectTravelesList,
 } from "@/constants/options";
 import { chatSession } from "@/service/AIModal";
-// import { channel } from "process";
 import React, { useEffect, useState } from "react";
 import GooglePlacesAutocomplete from "react-google-places-autocomplete";
 import { toast } from "sonner";
@@ -24,14 +23,34 @@ import axios from "axios";
 import { doc, setDoc } from "firebase/firestore";
 import { db } from "@/service/firebaseConfig";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
-import { useNavigate } from "react-router-dom"
+import { useNavigate } from "react-router-dom";
 
 function CreateTrip() {
   const [place, setPlace] = useState();
-  const [formData, setFormData] = useState([]);
+  const [formData, setFormData] = useState({});
   const [openDailog, setOpenDailog] = useState(false);
   const [loading, setLoading] = useState(false);
-  const navigate=useNavigate();
+  const [scriptLoaded, setScriptLoaded] = useState(false);
+  const navigate = useNavigate();
+
+  // Load Google Places API script dynamically
+  useEffect(() => {
+    const loadGooglePlacesScript = () => {
+      const script = document.createElement("script");
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_PLACE_API_KEY}&libraries=places`;
+      script.async = true;
+      script.onload = () => {
+        setScriptLoaded(true);
+      };
+      document.head.appendChild(script);
+    };
+
+    if (!window.google) {
+      loadGooglePlacesScript();
+    } else {
+      setScriptLoaded(true);
+    }
+  }, []);
 
   const handleInputChange = (name, value) => {
     setFormData({
@@ -56,15 +75,8 @@ function CreateTrip() {
       return;
     }
 
-    // if(formData?.noOfDays>5){
-    //   toast("Please Select days properly ie upto 5")
-    // }
-    // if(!formData?.noOfDays || !formData?.location || !formData?.budget || !formData?.traveler){
-    //   toast("Please Fill All Details.")
-    //   return;
-    // }
     if (
-      formData?.totalDays > 5 ||
+      formData?.noOfDays > 5 ||
       !formData?.location ||
       !formData?.budget ||
       !formData?.traveler
@@ -83,8 +95,6 @@ function CreateTrip() {
       .replace("{budget}", formData?.budget)
       .replace("{totalDays}", formData?.noOfDays);
 
-    // console.log(FINAL_PROMPT);
-
     const result = await chatSession.sendMessage(FINAL_PROMPT);
     console.log("--", result?.response?.text());
     setLoading(false);
@@ -102,17 +112,17 @@ function CreateTrip() {
       id: docId,
     });
     setLoading(false);
-    navigate('/view-trip/'+docId);
+    navigate("/view-trip/" + docId);
   };
 
   const GetUserProfile = (tokenInfo) => {
     axios
       .get(
-        `https://www.googleapis.com/oauth2/v1/userinfo?acess_token=${tokenInfo?.access_token}`,
+        `https://www.googleapis.com/oauth2/v1/userinfo?access_token=${tokenInfo?.access_token}`,
         {
           headers: {
             Authorization: `Bearer ${tokenInfo?.access_token}`,
-            Accept: "Application/json",
+            Accept: "application/json",
           },
         }
       )
@@ -137,24 +147,26 @@ function CreateTrip() {
       <div className="mt-20 flex flex-col gap-10">
         <div>
           <h2 className="text-xl my-3 font-medium">
-            {" "}
             What is destination of Choice?
           </h2>
-          <GooglePlacesAutocomplete
-            apiKey={import.meta.env.VITE_GOOGLE_PLACE_API_KEY}
-            selectProps={{
-              place,
-              onChange: (v) => {
-                setPlace(v);
-                handleInputChange("location", v);
-              },
-            }}
-          />
+          {scriptLoaded ? (
+            <GooglePlacesAutocomplete
+              apiKey={import.meta.env.VITE_GOOGLE_PLACE_API_KEY}
+              selectProps={{
+                place,
+                onChange: (v) => {
+                  setPlace(v);
+                  handleInputChange("location", v);
+                },
+              }}
+            />
+          ) : (
+            <p>Loading Google Places...</p>
+          )}
         </div>
 
         <div>
           <h2 className="text-xl my-3 font-medium">
-            {" "}
             How many days are you planning your trip?
           </h2>
           <Input
@@ -165,21 +177,20 @@ function CreateTrip() {
           />
         </div>
       </div>
+
       <div>
-        <label className="taxt-xl my-3 font-medium">What is your Budget?</label>
+        <label className="text-xl my-3 font-medium">What is your Budget?</label>
         <p>
-          The budget is exclusively allocated for activities and dining
-          purposes.{" "}
+          The budget is exclusively allocated for activities and dining purposes.
         </p>
-        <div className="grid grid-cols-3 gap-5 mt-5 ">
+        <div className="grid grid-cols-3 gap-5 mt-5">
           {SelectBudgetOptions.map((item, index) => (
             <div
               key={index}
               onClick={() => handleInputChange("budget", item.title)}
-              className={`p-4 border 
-              rounded-lg cursor cursor-pointer hover:shadow-2xl
-              ${formData?.budget == item.title && "shadow-lg border-black"}
-              `}
+              className={`p-4 border rounded-lg cursor-pointer hover:shadow-2xl ${
+                formData?.budget === item.title && "shadow-lg border-black"
+              }`}
             >
               <h2 className="text-4xl">{item.icon}</h2>
               <h2 className="font-bold text-lg">{item.title}</h2>
@@ -190,18 +201,17 @@ function CreateTrip() {
       </div>
 
       <div>
-        <h2 className="taxt-xl my-3 font-medium">
+        <h2 className="text-xl my-3 font-medium">
           Who do you plan on traveling with on your next adventure?
         </h2>
-        <div className="grid grid-cols-3 gap-5 mt-5 ">
+        <div className="grid grid-cols-3 gap-5 mt-5">
           {SelectTravelesList.map((item, index) => (
             <div
               key={index}
               onClick={() => handleInputChange("traveler", item.people)}
-              className={`p-4 border rounded-lg cursor cursor-pointer
-               hover:shadow-2xl
-               ${formData?.traveler == item.people && "shadow-lg border-black"}
-               `}
+              className={`p-4 border rounded-lg cursor-pointer hover:shadow-2xl ${
+                formData?.traveler === item.people && "shadow-lg border-black"
+              }`}
             >
               <h2 className="text-4xl">{item.icon}</h2>
               <h2 className="font-bold text-lg">{item.title}</h2>
@@ -225,10 +235,9 @@ function CreateTrip() {
         <DialogContent>
           <DialogHeader>
             <DialogDescription>
-              <img src="/logo.svg" />
+              <img src="/logo.svg" alt="Logo" />
               <h2 className="font-bold text-lg mt-7">Sign in With Google</h2>
               <p>Sign in to the App with Google authentication securely</p>
-
               <Button
                 onClick={login}
                 className="w-full mt-5 flex gap-4 items-center"
