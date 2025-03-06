@@ -6,7 +6,7 @@ import {
   SelectTravelesList,
 } from "@/constants/options";
 import { chatSession } from "@/service/AIModal";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import GooglePlacesAutocomplete from "react-google-places-autocomplete";
 import { toast } from "sonner";
 import {
@@ -14,8 +14,6 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { FcGoogle } from "react-icons/fc";
 import { useGoogleLogin } from "@react-oauth/google";
@@ -24,6 +22,7 @@ import { doc, setDoc } from "firebase/firestore";
 import { db } from "@/service/firebaseConfig";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { useNavigate } from "react-router-dom";
+import { useTour } from "@reactour/tour";
 
 function CreateTrip() {
   const [place, setPlace] = useState();
@@ -32,6 +31,29 @@ function CreateTrip() {
   const [loading, setLoading] = useState(false);
   const [scriptLoaded, setScriptLoaded] = useState(false);
   const navigate = useNavigate();
+
+  const { setIsOpen } = useTour();
+  const [showTourPopup, setShowTourPopup] = useState(false);
+
+  // Show the tour popup on page mount
+  useEffect(() => {
+    const hasSeenTour = localStorage.getItem('hasSeenTour');
+    if (!hasSeenTour) {
+      setShowTourPopup(true);
+    }
+  }, []);
+
+  const handleStartTour = () => {
+    setIsOpen(true);
+    setShowTourPopup(false);
+    localStorage.setItem('hasSeenTour', 'true');
+  };
+
+  const handleDoItLater = () => {
+    setShowTourPopup(false);
+    localStorage.setItem('hasSeenTour', 'true');
+  };
+
 
   // Load Google Places API script dynamically
   useEffect(() => {
@@ -135,17 +157,19 @@ function CreateTrip() {
   };
 
   return (
+
     <div className="sm:px-10 md:px-32 lg:px-56 xl:px-10 px-5 mt-10">
       <h2 className="font-bold text-3xl">
         Tell us your travel preferences 🌄🏔🌴
       </h2>
+
       <p className="mt-3 text-gray-500 text-xl">
         Just provide some basic information, and our trip planner will generate
         a customized itinerary based on your preferences.
       </p>
 
       <div className="mt-20 flex flex-col gap-10">
-        <div>
+        <div className="first-step">
           <h2 className="text-xl my-3 font-medium">
             What is destination of Choice?
           </h2>
@@ -165,7 +189,7 @@ function CreateTrip() {
           )}
         </div>
 
-        <div>
+        <div className="second-step">
           <h2 className="text-xl my-3 font-medium">
             How many days are you planning your trip?
           </h2>
@@ -178,7 +202,7 @@ function CreateTrip() {
         </div>
       </div>
 
-      <div>
+      <div className="third-step">
         <label className="text-xl my-3 font-medium">What is your Budget?</label>
         <p>
           The budget is exclusively allocated for activities and dining purposes.
@@ -188,9 +212,8 @@ function CreateTrip() {
             <div
               key={index}
               onClick={() => handleInputChange("budget", item.title)}
-              className={`p-4 border rounded-lg cursor-pointer hover:shadow-2xl ${
-                formData?.budget === item.title && "shadow-lg border-black"
-              }`}
+              className={`p-4 border rounded-lg cursor-pointer hover:shadow-2xl ${formData?.budget === item.title && "shadow-lg border-black"
+                }`}
             >
               <h2 className="text-4xl">{item.icon}</h2>
               <h2 className="font-bold text-lg">{item.title}</h2>
@@ -200,7 +223,7 @@ function CreateTrip() {
         </div>
       </div>
 
-      <div>
+      <div className="fourth-step">
         <h2 className="text-xl my-3 font-medium">
           Who do you plan on traveling with on your next adventure?
         </h2>
@@ -209,9 +232,8 @@ function CreateTrip() {
             <div
               key={index}
               onClick={() => handleInputChange("traveler", item.people)}
-              className={`p-4 border rounded-lg cursor-pointer hover:shadow-2xl ${
-                formData?.traveler === item.people && "shadow-lg border-black"
-              }`}
+              className={`p-4 border rounded-lg cursor-pointer hover:shadow-2xl ${formData?.traveler === item.people && "shadow-lg border-black"
+                }`}
             >
               <h2 className="text-4xl">{item.icon}</h2>
               <h2 className="font-bold text-lg">{item.title}</h2>
@@ -221,8 +243,8 @@ function CreateTrip() {
         </div>
       </div>
 
-      <div className="my-10 justify-center flex">
-        <Button disabled={loading} onClick={OnGenerateTrip}>
+      <div className="my-10 justify-center flex ">
+        <Button disabled={loading} onClick={OnGenerateTrip} className="fifth-step">
           {loading ? (
             <AiOutlineLoading3Quarters className="h-7 w-7 animate-spin" />
           ) : (
@@ -230,6 +252,23 @@ function CreateTrip() {
           )}
         </Button>
       </div>
+
+      <Dialog open={showTourPopup} onOpenChange={setShowTourPopup}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogDescription>
+              <h2 className="font-bold text-lg">Welcome to the Trip Planner!</h2>
+              <p>Would you like a quick tour of how to use this page?</p>
+              <div className="flex gap-2 mt-4">
+                <Button onClick={handleStartTour}>Start Tour</Button>
+                <Button variant="outline" onClick={handleDoItLater}>
+                  Do It Later
+                </Button>
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={openDailog}>
         <DialogContent>
