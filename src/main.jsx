@@ -11,19 +11,23 @@ import Viewtrip from './view-trip/[tripId]/index.jsx';
 import MyTrips from './my-trips/index.jsx';
 import { TourProvider } from '@reactour/tour';
 import { Button } from './components/ui/button.jsx';
+import CustomTrip from './custom-trip/index.jsx';
+import CommunityPage from './community/Community.jsx';
+import BikeListing from './bike-listing/BikeListing.jsx';
+import BikeDetails from './bike-listing/bike-details/BikeDetails.jsx';
 
 const steps = [
   {
     selector: '.first-step',
-    content: 'Enter the state or city you want to go!',
+    content: 'Enter the state/city you would like to visit!',
   },
   {
     selector: '.second-step',
-    content: 'Select the number of days you want to go!',
+    content: 'Enter the days of stay!',
   },
   {
     selector: '.third-step',
-    content: 'Enter your Budget',
+    content: 'Select your budget',
   },
   {
     selector: '.fourth-step',
@@ -31,7 +35,7 @@ const steps = [
   },
   {
     selector: '.fifth-step',
-    content: 'Fianly press this button to make the plan!',
+    content: 'Get started!',
   }
 ];
 
@@ -41,8 +45,20 @@ const router = createBrowserRouter([
     element: <App />,
   },
   {
+    path: '/community',
+    element: <CommunityPage/>
+  },
+  {
     path: '/create-trip',
     element: <CreateTrip />,
+  },
+  {
+    path:'/bikes',
+    element:<BikeListing/>
+  },
+  {
+    path:'bikes/:id',
+    element:<BikeDetails/>
   },
   {
     path: '/view-trip/:tripId',
@@ -52,6 +68,10 @@ const router = createBrowserRouter([
     path: '/my-trips',
     element: <MyTrips />,
   },
+  {
+    path: '/custom-trip',
+    element: <CustomTrip />
+  }
 ]);
 
 ReactDOM.createRoot(document.getElementById('root')).render(
@@ -62,24 +82,27 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         styles={{
           popover: (base) => ({
             ...base,
-            backgroundColor: '#1e293b',
-            color: '#fff',
-            borderRadius: '10px',
+            backgroundColor: 'hsl(var(--popover))',
+            color: 'hsl(var(--popover-foreground))',
+            borderRadius: 'var(--radius)',
             boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.3)',
-            padding: '16px',
+            padding: '20px',
+            maxWidth: '300px',
           }),
           dot: (base, { current }) => ({
             ...base,
-            backgroundColor: current ? '#06b6d4' : '#94a3b8',
+            backgroundColor: current ? 'hsl(var(--primary))' : 'hsl(var(--muted))',
           }),
           close: (base) => ({
             ...base,
-            color: '#fff',
+            color: 'hsl(var(--primary))',
             fontSize: '18px',
+            top: '10px',
+            right: '10px',
           }),
           arrow: (base) => ({
             ...base,
-            color: '#1e293b',
+            color: 'hsl(var(--popover))',
           }),
         }}
         components={{
@@ -94,7 +117,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
               <Button
                 onClick={() => {
                   if (currentStep === steps.length - 1) {
-                    setIsOpen(false); // Close the tour on the last step
+                    setIsOpen(false);
                   } else {
                     setCurrentStep((s) => s + 1);
                   }

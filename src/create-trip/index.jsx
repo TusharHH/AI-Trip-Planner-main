@@ -35,6 +35,8 @@ function CreateTrip() {
   const { setIsOpen } = useTour();
   const [showTourPopup, setShowTourPopup] = useState(false);
 
+  const [custom, setCustomTirp] = useState(false);
+
   // Show the tour popup on page mount
   useEffect(() => {
     const hasSeenTour = localStorage.getItem('hasSeenTour');
@@ -156,6 +158,12 @@ function CreateTrip() {
       });
   };
 
+  const handleCustomTrip = () => {
+    console.log("Custom Route")
+    setCustomTirp(true);
+    navigate('/custom-trip');
+  };
+
   return (
 
     <div className="sm:px-10 md:px-32 lg:px-56 xl:px-10 px-5 mt-10">
@@ -244,13 +252,14 @@ function CreateTrip() {
       </div>
 
       <div className="my-10 justify-center flex ">
-        <Button disabled={loading} onClick={OnGenerateTrip} className="fifth-step">
+        <Button disabled={loading} onClick={OnGenerateTrip} className="fifth-step mr-4">
           {loading ? (
             <AiOutlineLoading3Quarters className="h-7 w-7 animate-spin" />
           ) : (
-            "Generate Trip"
+            "Generate AI Trip"
           )}
         </Button>
+        <Button disabled={loading} onClick={handleCustomTrip}>Custom Trip</Button>
       </div>
 
       <Dialog open={showTourPopup} onOpenChange={setShowTourPopup}>

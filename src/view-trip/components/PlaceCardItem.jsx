@@ -1,3 +1,4 @@
+import ImageWithFallback from '@/components/custom/ImageWithFallback';
 import { Button } from '@/components/ui/button';
 import { GetPlaceDetails, PHOTO_REF_URL } from '@/service/GlobalApi';
 import React, { useEffect, useState } from 'react'
@@ -26,9 +27,14 @@ function PlaceCardItem({ place }) {
             <Link to={'https://www.google.com/maps/search/?api=1&query=' + place?.placeName + "," + place?.geoCoordinates} target='_blank'>
                 <div className='my-4 bg-gray-50 p-2 gap-2 border rounded-lg flex flex-cols-2 hover:scale-105 transition-all hover:shadow-md cursor-pointer '>
                     <div className='w-full width '>
-                        <img src={photoUrl ? photoUrl : '/public/road-trip-vacation.jpg'} className='h-[200px]  max-w-full rounded-xl object-cover' />
+                        <ImageWithFallback
+                            src={photoUrl}
+                            fallback="/public/road-trip-vacation.jpg" 
+                            alt="Trip Location"
+                            className="h-[200px]  max-w-full rounded-xl object-cover"
+                        />
                     </div>
-                <div>
+                    <div>
                         {/* <h2 className='font-medium text-sm text-orange-600'>{place.time}</h2> */}
                         <h2 className='font-bold'>{place.placeName}</h2>
                         <p className='text-sm text-gray-500'>{place.placeDetails}</p>

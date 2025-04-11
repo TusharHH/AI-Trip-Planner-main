@@ -53,7 +53,13 @@ function Header() {
             </a>
             <Popover>
               <PopoverTrigger>
-                <img src={user?.picture} className='rounded-full w-[38px] h-[38px]' />
+                {user?.picture ? (
+                  <img src={user.picture} className='rounded-full w-[38px] h-[38px]' onError={(e) => e.target.style.display = 'none'} />
+                ) : (
+                  <div className="rounded-full w-[38px] h-[38px] bg-blue-500 flex items-center justify-center text-white font-bold text-lg">
+                    {user?.given_name?.charAt(0).toUpperCase()}
+                  </div>
+                )}
               </PopoverTrigger>
               <PopoverContent>
                 <h2 className="cursor-pointer" onClick={() => {
