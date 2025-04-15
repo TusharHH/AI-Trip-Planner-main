@@ -7,6 +7,7 @@ function UserTripCardItem({trip}) {
 
   useEffect(()=>{
     trip&&GetPlacePhoto();
+    console.log(trip._id)
   },[trip])
 
   const GetPlacePhoto=async()=>{
@@ -19,11 +20,11 @@ function UserTripCardItem({trip}) {
     })
   }
   return (
-   <Link to={'/view-trip/'+trip?.id}>
-    <div className='hover:scale-105 transition-all hover:shadow-sm'>
+   <Link to={'/view-trip/'+trip?._id}>
+    <div className='transition-all hover:scale-105 hover:shadow-sm'>
      <img src={photoUrl ? photoUrl : '/public/road-trip-vacation.jpg'}  className='rounded-xl h-[200px] w-full object-cover'/>
       <div>
-      <h2 className='font-medium text-lg'>{trip?.userSelection?.location?.label}</h2>
+      <h2 className='text-lg font-medium'>{trip?.userSelection?.location?.label}</h2>
       <h2 className="text-sm text-gray-600" >{trip?.userSelection?.noOfDays} Days trip with {trip?.userSelection?.budget} </h2>
       </div>
     </div>

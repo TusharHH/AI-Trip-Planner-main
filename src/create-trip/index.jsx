@@ -24,6 +24,19 @@ import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { useNavigate } from "react-router-dom";
 import { useTour } from "@reactour/tour";
 
+const api = axios.create({
+  baseURL: "http://localhost:5000/api",
+});
+
+export const tripApi = {
+  createTrip: (tripData) => api.post('/trips', tripData),
+  getTrip: (id) => api.get(`/trips/${id}`),
+  getUserTrips: (email, token) => api.get(`/trips/user/${email}`),
+  updateTrip: (id, updates, token) => api.put(`/trips/${id}`, updates,),
+  deleteTrip: (id, token) => api.delete(`/trips/${id}`, ),
+};
+
+
 function CreateTrip() {
   const [place, setPlace] = useState();
   const [formData, setFormData] = useState({});
@@ -36,6 +49,7 @@ function CreateTrip() {
   const [showTourPopup, setShowTourPopup] = useState(false);
 
   const [custom, setCustomTirp] = useState(false);
+
 
   // Show the tour popup on page mount
   useEffect(() => {
@@ -125,18 +139,73 @@ function CreateTrip() {
     SaveAiTrip(result?.response?.text());
   };
 
+  const parseAIResponse = (rawData) => {
+    try {
+      // Attempt direct JSON parse
+      return JSON.parse(rawData);
+    } catch (error) {
+      // Fallback: Handle malformed JSON structure
+      const fixedData = rawData
+        // Fix missing "plan" property for day 3
+        .replace(/"day": 3, {/g, '"day": 3, "plan": {')
+        // Fix trailing commas
+        .replace(/,\s*]/g, ']')
+        .replace(/,\s*}/g, '}');
+
+      return JSON.parse(fixedData);
+    }
+  };
+
+
+
+  // Helper function to handle images
+  const processImages = (tripData) => {
+    const processImage = (url) => {
+      if (url.startsWith('data:image')) return url; // Already base64
+      // Add logic to convert external URLs to base64 if needed
+      return url;
+    };
+
+    return {
+      ...tripData,
+      hotelOptions: tripData.hotelOptions?.map(hotel => ({
+        ...hotel,
+        hotelImageUrl: processImage(hotel.hotelImageUrl)
+      })),
+      itinerary: tripData.itinerary?.map(day => ({
+        ...day,
+        plan: day.plan?.map(place => ({
+          ...place,
+          placeImageUrl: processImage(place.placeImageUrl)
+        }))
+      }))
+    };
+  };
+
   const SaveAiTrip = async (TripData) => {
     setLoading(true);
-    const user = JSON.parse(localStorage.getItem("user"));
-    const docId = Date.now().toString();
-    await setDoc(doc(db, "AITrips", docId), {
-      userSelection: formData,
-      TripData: JSON.parse(TripData),
-      userEmail: user?.email,
-      id: docId,
-    });
-    setLoading(false);
-    navigate("/view-trip/" + docId);
+    try {
+      const user = JSON.parse(localStorage.getItem("user"));
+
+      // Use custom parser
+      const parsedTripData = parseAIResponse(TripData);
+
+      // Process images - convert to base64 if needed
+      const processedData = processImages(parsedTripData);
+
+      const response = await tripApi.createTrip({
+        userSelections: formData,
+        tripData: processedData,
+        userEmail: user?.email
+      });
+
+      navigate(`/view-trip/${response.data._id}`);
+    } catch (error) {
+      toast.error("Failed to save trip");
+      console.error("Save trip error:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const GetUserProfile = (tokenInfo) => {
@@ -166,19 +235,19 @@ function CreateTrip() {
 
   return (
 
-    <div className="sm:px-10 md:px-32 lg:px-56 xl:px-10 px-5 mt-10">
-      <h2 className="font-bold text-3xl">
+    <div className="px-5 mt-10 sm:px-10 md:px-32 lg:px-56 xl:px-10">
+      <h2 className="text-3xl font-bold">
         Tell us your travel preferences 🌄🏔🌴
       </h2>
 
-      <p className="mt-3 text-gray-500 text-xl">
+      <p className="mt-3 text-xl text-gray-500">
         Just provide some basic information, and our trip planner will generate
         a customized itinerary based on your preferences.
       </p>
 
-      <div className="mt-20 flex flex-col gap-10">
+      <div className="flex flex-col gap-10 mt-20">
         <div className="first-step">
-          <h2 className="text-xl my-3 font-medium">
+          <h2 className="my-3 text-xl font-medium">
             What is destination of Choice?
           </h2>
           {scriptLoaded ? (
@@ -198,7 +267,7 @@ function CreateTrip() {
         </div>
 
         <div className="second-step">
-          <h2 className="text-xl my-3 font-medium">
+          <h2 className="my-3 text-xl font-medium">
             How many days are you planning your trip?
           </h2>
           <Input
@@ -211,7 +280,7 @@ function CreateTrip() {
       </div>
 
       <div className="third-step">
-        <label className="text-xl my-3 font-medium">What is your Budget?</label>
+        <label className="my-3 text-xl font-medium">What is your Budget?</label>
         <p>
           The budget is exclusively allocated for activities and dining purposes.
         </p>
@@ -224,7 +293,7 @@ function CreateTrip() {
                 }`}
             >
               <h2 className="text-4xl">{item.icon}</h2>
-              <h2 className="font-bold text-lg">{item.title}</h2>
+              <h2 className="text-lg font-bold">{item.title}</h2>
               <h2 className="text-sm text-gray-500">{item.desc}</h2>
             </div>
           ))}
@@ -232,7 +301,7 @@ function CreateTrip() {
       </div>
 
       <div className="fourth-step">
-        <h2 className="text-xl my-3 font-medium">
+        <h2 className="my-3 text-xl font-medium">
           Who do you plan on traveling with on your next adventure?
         </h2>
         <div className="grid grid-cols-3 gap-5 mt-5">
@@ -244,15 +313,15 @@ function CreateTrip() {
                 }`}
             >
               <h2 className="text-4xl">{item.icon}</h2>
-              <h2 className="font-bold text-lg">{item.title}</h2>
+              <h2 className="text-lg font-bold">{item.title}</h2>
               <h2 className="text-sm text-gray-500">{item.desc}</h2>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="my-10 justify-center flex ">
-        <Button disabled={loading} onClick={OnGenerateTrip} className="fifth-step mr-4">
+      <div className="flex justify-center my-10 ">
+        <Button disabled={loading} onClick={OnGenerateTrip} className="mr-4 fifth-step">
           {loading ? (
             <AiOutlineLoading3Quarters className="h-7 w-7 animate-spin" />
           ) : (
@@ -266,7 +335,7 @@ function CreateTrip() {
         <DialogContent>
           <DialogHeader>
             <DialogDescription>
-              <h2 className="font-bold text-lg">Welcome to the Trip Planner!</h2>
+              <h2 className="text-lg font-bold">Welcome to the Trip Planner!</h2>
               <p>Would you like a quick tour of how to use this page?</p>
               <div className="flex gap-2 mt-4">
                 <Button onClick={handleStartTour}>Start Tour</Button>
@@ -284,11 +353,11 @@ function CreateTrip() {
           <DialogHeader>
             <DialogDescription>
               <img src="/logo.svg" alt="Logo" />
-              <h2 className="font-bold text-lg mt-7">Sign in With Google</h2>
+              <h2 className="text-lg font-bold mt-7">Sign in With Google</h2>
               <p>Sign in to the App with Google authentication securely</p>
               <Button
                 onClick={login}
-                className="w-full mt-5 flex gap-4 items-center"
+                className="flex items-center w-full gap-4 mt-5"
               >
                 <FcGoogle className="h-7 w-7" />
                 Sign In With Google

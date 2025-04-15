@@ -76,6 +76,22 @@ function Hero() {
   // Modify the basic plan CTA to trigger the payment popup
   const plans = [
     {
+      title: "Free Plan",
+      description: "Try our service for free.",
+      price: "0.00",
+      duration: "month",
+      stripePriceId: null,
+      ctaText: "Get Started",
+      features: ["Use Our AI to plan your Trips"],
+      onCtaClick: () => {
+        if (user) {
+          navigate('/create-trip');
+        } else {
+          navigate('/login');
+        }
+      }
+    },
+    {
       title: "Basic Plan",
       description: "Perfect for individuals.",
       price: "9.99",

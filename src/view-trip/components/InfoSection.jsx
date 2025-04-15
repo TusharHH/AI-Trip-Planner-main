@@ -3,50 +3,37 @@ import React, { useEffect, useState } from 'react'
 import { IoMdSend } from "react-icons/io";
 import { GetPlaceDetails, PHOTO_REF_URL } from '@/service/GlobalApi';
 import ImageWithFallback from '@/components/custom/ImageWithFallback';
+import { Badge } from 'lucide-react';
 
 function InfoSection({ trip }) {
-
-  const [photoUrl, setPhotoUrl] = useState();
-  useEffect(() => {
-    trip && GetPlacePhoto();
-  }, [trip])
-
-  const GetPlacePhoto = async () => {
-    const data = {
-      textQuery: trip?.userSelection?.location?.label
-    }
-    const result = await GetPlaceDetails(data).then(resp => {
-      // console.log(resp.data.places[0].photos[3].name)
-      const PhotoUrl = PHOTO_REF_URL.replace('{NAME}', resp.data.places[0].photos[3].name)
-      setPhotoUrl(PhotoUrl);
-
-    })
-  }
-
-  //      '/road-trip-vacation.jpg'
+  // Simplified photo handling
+  const photoUrl = trip?.TripData?.hotelOptions?.[0]?.hotelImageUrl || '/road-trip-vacation.jpg';
 
   return (
     <div>
       <ImageWithFallback
         src={photoUrl}
-        fallback="/public/road-trip-vacation.jpg" 
+        fallback="/road-trip-vacation.jpg"
         alt="Trip Location"
         className="h-[330px] w-full object-cover rounded-xl"
       />
-      <div className='flex justify-between items-center'>
-        <div className='my-6 flex flex-col gap-2'>
-          <h2 className='font-bold text-2xl'>{trip?.userSelection?.location?.label}</h2>
-          <div className='flex gap-6 mt-4'>
-            <h2 className='bg-gray-200 font-medium text-gray-600 rounded-full p-1 px-4 md:text-md'>🗓️ {trip?.userSelection?.noOfDays} Day</h2>
-            <h2 className='bg-gray-200 font-medium text-gray-600 rounded-full p-1 px-4 md:text-md'>👩‍👧‍👦 Number of Traveler : {trip?.userSelection?.traveler} </h2>
-            <h2 className='bg-gray-200 font-medium text-gray-600 rounded-full p-1 px-4 md:text-md'>💵 {trip?.userSelection?.budget} Budget </h2>
+      <div className='flex items-center justify-between'>
+        <div className='flex flex-col gap-2 my-6'>
+          <h2 className='text-2xl font-bold'>
+            {trip?.userSelection?.location?.label}
+          </h2>
+          <div className='flex flex-wrap gap-6 mt-4'>
+            <Badge variant="secondary">🗓️ {trip?.userSelection?.noOfDays} Days</Badge>
+            <Badge variant="secondary">👩‍👧‍👦 {trip?.userSelection?.traveler}</Badge>
+            <Badge variant="secondary">💵 {trip?.userSelection?.budget} Budget</Badge>
           </div>
         </div>
-        <Button><IoMdSend /></Button>
+        <Button>
+          <IoMdSend />
+        </Button>
       </div>
     </div>
-
-  )
+  );
 }
 
 export default InfoSection

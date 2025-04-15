@@ -1,47 +1,76 @@
-import { db } from '@/service/firebaseConfig';
-import React, { useEffect, useState } from 'react'
-import { useNavigation } from 'react-router-dom';
-import { collection, query, where, getDocs } from "firebase/firestore";
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import UserTripCardItem from './components/UserTripCardItem';
 
-function MyTrips() {
-    const navigation=useNavigation();
-    const [userTrips,setUserTrips] = useState([]);
-    useEffect(() =>{
-        GetUserTrips();
-    },[])
-    const GetUserTrips=async()=>{
-        const user=JSON.parse(localStorage.getItem('user'));
-        if(!user){
-            navigation('/');
-            return ;
-        }
-        setUserTrips([]); 
-        const q=query(collection(db,'AITrips'),where('userEmail','==',user?.email))
-        const querySnapshot = await getDocs(q);
-        querySnapshot.forEach((doc) => {
-        console.log(doc.id, " => ", doc.data());
-        setUserTrips(prevVal=>[...prevVal,doc.data()])
-    });
-    }
-   
-  return (
-    <div className='px-5 mt-12 sm:px-10 md:px-32 lg:px-56 xl:px-72"'>
-      <h2 className='font-bold text-3xl mb-10'>My Trips</h2>
-      <div className='grid grid-cols-2 md:grid-cols-3 gap-5 my-3'>
-        {userTrips?.length>0 ? userTrips.map((trip,index)=>(
-            <UserTripCardItem trip={trip} key={index} />
-        ))
-        // skelton ... 
-        : [1,2,3,4,5,6].map((item,index)=>(
-            <div key={index} className='h-[200px] w-full bg-slate-200 animate-pulse rounded-xl'>
+const api = axios.create({
+  baseURL: "http://localhost:5000/api",
+});
 
-            </div>
-        ))
+export const tripApi = {
+  getUserTrips: (email) => api.get(`/trips/user/${email}`),
+};
+
+function MyTrips() {
+    const navigate = useNavigate();
+    const [userTrips, setUserTrips] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        getUserTrips();
+    }, []);
+
+    const getUserTrips = async () => {
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user) {
+            navigate('/login');
+            return;
         }
-      </div>
-    </div>
-  )
+
+        try {
+            setLoading(true);
+            const response = await tripApi.getUserTrips(user.email);
+            
+            if (response.data && Array.isArray(response.data)) {
+                // Transform data to match your frontend expectations
+                const transformedTrips = response.data.map(trip => ({
+                    ...trip,
+                    TripData: trip.tripData,  // Map tripData to TripData
+                    userSelection: trip.userSelections  // Map userSelections to userSelection
+                }));
+                setUserTrips(transformedTrips);
+            } else {
+                setUserTrips([]);
+            }
+        } catch (error) {
+            console.error("Error fetching trips:", error);
+            // Handle error (show toast, etc.)
+        } finally {
+            setLoading(false);
+        }
+    };
+   
+    return (
+        <div className='px-5 mt-12 sm:px-10 md:px-32 lg:px-56 xl:px-72"'>
+            <h2 className='mb-10 text-3xl font-bold'>My Trips</h2>
+            <div className='grid grid-cols-2 gap-5 my-3 md:grid-cols-3'>
+                {loading ? (
+                    // Skeleton loading
+                    [1,2,3,4,5,6].map((item, index) => (
+                        <div key={index} className='h-[200px] w-full bg-slate-200 animate-pulse rounded-xl'></div>
+                    ))
+                ) : userTrips.length > 0 ? (
+                    userTrips.map((trip, index) => (
+                        <UserTripCardItem trip={trip} key={trip._id || index} />
+                    ))
+                ) : (
+                    <div className="py-10 text-center col-span-full">
+                        <p>No trips found. Start by creating a new trip!</p>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
 }
 
-export default MyTrips
+export default MyTrips;

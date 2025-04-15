@@ -49,15 +49,25 @@ const PaymentService = {
   createPaymentIntent: (data) => api.post('/payment/create-payment-intent', data),
   handlePaymentSuccess: (data) => api.post('/payment/handle-payment-success', data),
 };
+// services/api.js
+const CommunityService = {
+  getPosts: () => api.get('/community'),
+  createPost: (content) => api.post('/community', { content }),
+  likePost: (postId) => api.post(`/community/${postId}/like`),
+  addComment: (postId, content) => api.post(`/community/${postId}/comments`, { content }),
+};
 
+// Add to exports
 // Export named exports
 export const bikes = BikeService;
 export const payment = PaymentService;
 export const users = UserService;
+export const community = CommunityService;
 
 // Or default export if preferred
 export default {
   bikes: BikeService,
   payment: PaymentService,
   users: UserService,
+  community: CommunityService,
 };
