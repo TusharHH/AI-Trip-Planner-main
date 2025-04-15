@@ -139,7 +139,6 @@ function Header() {
                 )}
 
                 {user?.type === 'subscribedUser' && (
-
                   <a href="/community">
                     <MUIButton variant="outlined" size="small" sx={{ borderRadius: '999px', textTransform: 'none' }}>
                       🧑‍🤝‍🧑 Community

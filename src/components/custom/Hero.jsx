@@ -106,7 +106,7 @@ function Hero() {
       planType: "subscribedUser",
       features: [
         "Use Our AI to plan your Trips",
-        "Get custom and more detailed Plans",
+        "Get Access to our community",
       ],
       onCtaClick: () => openPaymentModal(plans[1])
     },
@@ -121,7 +121,6 @@ function Hero() {
       features: [
         "Use Our AI to plan your Trips",
         "Get Access to our community",
-        "Get custom and more detailed Plans",
         "Rent our Bullet bikes at cheap prices"
       ],
       onCtaClick: () => openPaymentModal(plans[2])
