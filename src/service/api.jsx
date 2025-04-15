@@ -50,24 +50,30 @@ const PaymentService = {
   handlePaymentSuccess: (data) => api.post('/payment/handle-payment-success', data),
 };
 // services/api.js
-const CommunityService = {
+export const community = {
+  createPost: (postData) => api.post('/community/posts', postData),
   getPosts: () => api.get('/community'),
-  createPost: (content) => api.post('/community', { content }),
-  likePost: (postId) => api.post(`/community/${postId}/like`),
-  addComment: (postId, content) => api.post(`/community/${postId}/comments`, { content }),
+  likePost: (postId, userId) => api.post(`/community/${postId}/like`, { userId }),
+  addComment: (postId, commentData) => api.post(`/community/${postId}/comments`, commentData)
 };
+// In services/api.js
 
 // Add to exports
 // Export named exports
 export const bikes = BikeService;
 export const payment = PaymentService;
 export const users = UserService;
-export const community = CommunityService;
 
 // Or default export if preferred
 export default {
   bikes: BikeService,
   payment: PaymentService,
   users: UserService,
-  community: CommunityService,
+  community,
+  tours: {
+    getAllTours: () => axios.get('/api/tours'),
+    createTour: (data) => axios.post('/api/tours', data),
+    updateTour: (id, data) => axios.put(`/api/tours/${id}`, data),
+    deleteTour: (id) => axios.delete(`/api/tours/${id}`)
+  }  
 };

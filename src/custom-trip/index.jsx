@@ -42,15 +42,15 @@ const trips = [
 function CustomTrip() {
   return (
     <div className='p-8'>
-      <h1 className='text-2xl font-bold mb-4'>Custom Trips</h1>
-      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+      <h1 className='mb-4 text-2xl font-bold'>Custom Trips</h1>
+      <div className='grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3'>
         {trips.map((trip) => (
-          <div key={trip.id} className='border p-4 rounded-lg shadow-lg'>
-            <h2 className='text-xl font-semibold mb-2'>{trip.name}</h2>
+          <div key={trip.id} className='p-4 border rounded-lg shadow-lg'>
+            <h2 className='mb-2 text-xl font-semibold'>{trip.name}</h2>
             {trip.places.map((place) => (
               <div key={place.id} className='mb-4'>
-                <img src={place.image} alt={place.name} className='w-full h-40 object-cover rounded-lg' />
-                <h3 className='text-lg font-medium mt-2'>{place.name}</h3>
+                <img src={place.image} alt={place.name} className='object-cover w-full h-40 rounded-lg' />
+                <h3 className='mt-2 text-lg font-medium'>{place.name}</h3>
                 <a href={place.link} target='_blank' rel='noopener noreferrer' className='text-blue-500'>View on Google Maps</a>
               </div>
             ))}

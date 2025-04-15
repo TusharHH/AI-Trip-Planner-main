@@ -13,8 +13,14 @@ function Hero() {
   const stripe = useStripe();
   const elements = useElements();
   const user = JSON.parse(localStorage.getItem('user'));
+  const [selectedPlan, setSelectedPlan] = useState(null);
 
-  const handlePayment = async (stripePriceId) => {
+  const openPaymentModal = (plan) => {
+    setPaymentError('');
+    setSelectedPlan(plan);
+    setShowPaymentModal(true);
+  };
+  const handlePayment = async (stripePriceId, planType) => {
     if (!stripe || !elements) {
       console.error('Stripe not initialized');
       return;
@@ -24,20 +30,20 @@ function Hero() {
       setLoading(true);
       setPaymentError('');
 
-      // Create payment intent
+      // Create payment intent with user type
       const { clientSecret } = await payment.createPaymentIntent({
         userId: user?._id,
-        stripePriceId
+        stripePriceId,
+        userType: user?.type || 'user', // Send current user type
+        planType // 'basic' or 'pro'
       });
 
-      // Get the CardElement from Elements
       const cardElement = elements.getElement(CardElement);
       if (!cardElement) {
-        setPaymentError("Payment failed: Card element not found. Please ensure it's rendered on the page.");
+        setPaymentError("Payment failed: Card element not found.");
         return;
       }
 
-      // Confirm payment with Stripe
       const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
         payment_method: { card: cardElement }
       });
@@ -47,13 +53,17 @@ function Hero() {
         throw error;
       }
 
-      // Handle successful payment
-      await payment.handlePaymentSuccess({
+      // Handle successful payment with user type
+      const response = await payment.handlePaymentSuccess({
         paymentIntentId: paymentIntent.id,
-        userId: user._id
+        userId: user._id,
+        planType, // Send which plan was purchased
+        userType: user?.type || 'user'
       });
 
       setShowPaymentModal(false);
+      console.log('Payment successful:', response.user);
+      localStorage.setItem('user', JSON.stringify(response.user));
       navigate('/custom-trip');
     } catch (error) {
       console.error('Payment failed:', error);
@@ -63,11 +73,6 @@ function Hero() {
     }
   };
 
-  // Open/close modal functions
-  const openPaymentModal = () => {
-    setPaymentError('');
-    setShowPaymentModal(true);
-  };
 
   const closePaymentModal = () => {
     setShowPaymentModal(false);
@@ -79,7 +84,7 @@ function Hero() {
       title: "Free Plan",
       description: "Try our service for free.",
       price: "0.00",
-      duration: "month",
+      duration: "lifetime",
       stripePriceId: null,
       ctaText: "Get Started",
       features: ["Use Our AI to plan your Trips"],
@@ -95,18 +100,23 @@ function Hero() {
       title: "Basic Plan",
       description: "Perfect for individuals.",
       price: "9.99",
-      duration: "month",
+      duration: "lifetime",
       stripePriceId: "price_12345",
-      ctaText: "Get Started",
-      features: ["Use Our AI to plan your Trips"],
-      onCtaClick: () => openPaymentModal()
+      ctaText: "Upgrade Now",
+      planType: "subscribedUser",
+      features: [
+        "Use Our AI to plan your Trips",
+        "Get custom and more detailed Plans",
+      ],
+      onCtaClick: () => openPaymentModal(plans[1])
     },
     {
       title: "Pro Plan",
-      description: "Ideal for professionals.",
+      description: "Ideal for Tirp lovers.",
       price: "19.99",
-      duration: "month",
+      duration: "lifetime",
       stripePriceId: "price_67890",
+      planType: "proUser",
       ctaText: "Upgrade Now",
       features: [
         "Use Our AI to plan your Trips",
@@ -114,7 +124,7 @@ function Hero() {
         "Get custom and more detailed Plans",
         "Rent our Bullet bikes at cheap prices"
       ],
-      onCtaClick: () => openPaymentModal()
+      onCtaClick: () => openPaymentModal(plans[2])
     }
   ];
 
@@ -172,8 +182,11 @@ function Hero() {
             </div>
             <div className="flex justify-end gap-2 mt-4">
               <Button onClick={closePaymentModal} disabled={loading}>Cancel</Button>
-              <Button onClick={() => handlePayment("price_12345")} disabled={loading}>
-                {loading ? 'Processing...' : 'Pay'}
+              <Button
+                onClick={() => handlePayment(selectedPlan.stripePriceId, selectedPlan.planType)}
+                disabled={loading}
+              >
+                {loading ? 'Processing...' : `Pay $${selectedPlan.price}`}
               </Button>
             </div>
           </div>

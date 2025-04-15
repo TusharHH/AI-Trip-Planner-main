@@ -6,17 +6,20 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover"
+} from "@/components/ui/popover";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 import { Button } from '../ui/button';
 import { FcGoogle } from "react-icons/fc";
 import { FiLogOut, FiPlusCircle, FiCompass } from "react-icons/fi";
 import Logo from '../../../public/download-removebg-preview.png';
+
+// MUI
+import { Button as MUIButton, Stack } from '@mui/material';
 
 function Header() {
   const [user, setUser] = useState(null);
@@ -34,8 +37,6 @@ function Header() {
   const GetUserProfile = async (tokenInfo) => {
     try {
       setLoading(true);
-
-      // Get Google profile
       const googleResponse = await axios.get(
         `https://www.googleapis.com/oauth2/v1/userinfo?access_token=${tokenInfo?.access_token}`,
         {
@@ -46,7 +47,6 @@ function Header() {
         }
       );
 
-      // Create/Update user in your database
       const backendUser = await users.createUser({
         googleId: googleResponse.data.id,
         email: googleResponse.data.email,
@@ -56,10 +56,8 @@ function Header() {
         emailVerified: googleResponse.data.verified_email
       });
 
-      // Store the complete user data from your backend
       localStorage.setItem('user', JSON.stringify(backendUser));
       setUser(backendUser);
-      console.log(user)
       setOpenDialog(false);
     } catch (error) {
       console.error('Login failed:', error);
@@ -110,18 +108,47 @@ function Header() {
         <div className="flex items-center gap-2">
           {user ? (
             <>
-              <a href="/create-trip">
-                <Button variant="ghost" className="gap-2 text-sm rounded-full">
-                  <FiPlusCircle className="w-4 h-4" />
-                  <span className="hidden sm:inline">Create Trip</span>
-                </Button>
-              </a>
-              <a href="/my-trips">
-                <Button variant="ghost" className="gap-2 text-sm rounded-full">
-                  <FiCompass className="w-4 h-4" />
-                  <span className="hidden sm:inline">My Trips</span>
-                </Button>
-              </a>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <a href="/create-trip">
+                  <Button variant="ghost" className="gap-2 text-sm rounded-full">
+                    <FiPlusCircle className="w-4 h-4" />
+                    <span className="hidden sm:inline">Create Trip</span>
+                  </Button>
+                </a>
+
+                <a href="/my-trips">
+                  <Button variant="ghost" className="gap-2 text-sm rounded-full">
+                    <FiCompass className="w-4 h-4" />
+                    <span className="hidden sm:inline">My Trips</span>
+                  </Button>
+                </a>
+
+                {user?.type === 'proUser' && (
+                  <>
+                    <a href="/community">
+                      <MUIButton variant="outlined" size="small" sx={{ borderRadius: '999px', textTransform: 'none' }}>
+                        🧑‍🤝‍🧑 Community
+                      </MUIButton>
+                    </a>
+                    <a href="/bikes">
+                      <MUIButton variant="outlined" size="small" sx={{ borderRadius: '999px', textTransform: 'none' }}>
+                        🛵 Bike Renting
+                      </MUIButton>
+                    </a>
+                  </>
+                )}
+
+                {user?.type === 'subscribedUser' && (
+
+                  <a href="/community">
+                    <MUIButton variant="outlined" size="small" sx={{ borderRadius: '999px', textTransform: 'none' }}>
+                      🧑‍🤝‍🧑 Community
+                    </MUIButton>
+                  </a>
+                )}
+
+              </Stack>
+
               <Popover>
                 <PopoverTrigger asChild>
                   {user?.profilePicture ? (

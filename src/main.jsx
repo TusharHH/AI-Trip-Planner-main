@@ -15,6 +15,7 @@ import CustomTrip from './custom-trip/index.jsx';
 import CommunityPage from './community/Community.jsx';
 import BikeListing from './bike-listing/BikeListing.jsx';
 import BikeDetails from './bike-listing/bike-details/BikeDetails.jsx';
+import TripPlanPage from './custom-trip/[id]/index.jsx';
 
 const steps = [
   {
@@ -69,8 +70,12 @@ const router = createBrowserRouter([
     element: <MyTrips />,
   },
   {
-    path: '/custom-trip',
-    element: <CustomTrip />
+    path: '/custom-trip/:tripId',
+    element: <Viewtrip />
+  },
+  {
+    path: '/custom-trip/',
+    element: <CustomTrip/>
   }
 ]);
 
